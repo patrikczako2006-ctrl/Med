@@ -1,7 +1,9 @@
 import './globals.css';
 import { CartProvider } from '../components/CartContext';
+import { ToastProvider } from '../components/ToastContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import CookieBanner from '../components/CookieBanner';
 
 export const metadata = {
   title: {
@@ -32,9 +34,12 @@ export default function RootLayout({ children }) {
     <html lang="sk">
       <body className="min-h-screen flex flex-col bg-gray-50 font-sans">
         <CartProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <ToastProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <CookieBanner />
+          </ToastProvider>
         </CartProvider>
       </body>
     </html>
