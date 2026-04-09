@@ -1,41 +1,26 @@
 import './globals.css';
-import { CartProvider } from '../components/CartContext';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 export const metadata = {
   title: {
-    default: 'Krokavec – Včelárstvo a med | E-shop',
-    template: '%s | Krokavec',
+    default: 'DocReady – Váš zdravotný asistent',
+    template: '%s | DocReady',
   },
   description:
-    'Predaj včelárskych potrieb a prírodného medu. Úle, rámiky, príslušenstvo a med z Kraskova. Kvalita overená generáciami.',
-  keywords: [
-    'včelárstvo',
-    'med',
-    'úle',
-    'rámiky',
-    'včelie produkty',
-    'Kraskovo',
-    'Slovensko',
-  ],
-  authors: [{ name: 'Milan Krokavec' }],
+    'Pripravte sa na každú lekársku návštevu. Sledujte príznaky, lieky a laboratórne výsledky. AI asistent pre vaše zdravie.',
+  keywords: ['zdravie', 'lekár', 'lieky', 'príznaky', 'zdravotný denník', 'Slovensko'],
+  authors: [{ name: 'DocReady' }],
   openGraph: {
     type: 'website',
     locale: 'sk_SK',
-    siteName: 'Krokavec – Včelárstvo',
+    siteName: 'DocReady',
   },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="sk">
-      <body className="min-h-screen flex flex-col bg-gray-50 font-sans">
-        <CartProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </CartProvider>
+      <body className="min-h-screen flex flex-col bg-gray-50">
+        {children}
       </body>
     </html>
   );
