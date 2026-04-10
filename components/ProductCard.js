@@ -19,10 +19,20 @@ export default function ProductCard({ product }) {
     ramiky: '🔲',
     prislusenstvo: '🔧',
     med: '🍯',
+    balicky: '🎁',
   };
 
+  const savings = product.originalPrice ? product.originalPrice - product.price : 0;
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col relative">
+      {/* Savings badge */}
+      {savings > 0 && (
+        <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg z-10">
+          Ušetríte {savings} €
+        </div>
+      )}
+
       {/* Category badge + emoji */}
       <div className="bg-honey-50 rounded-t-2xl p-6 flex items-center justify-center text-5xl min-h-[120px]">
         {categoryEmoji[product.category] || '📦'}
@@ -40,9 +50,16 @@ export default function ProductCard({ product }) {
         </p>
 
         <div className="flex items-center justify-between mt-auto">
-          <span className="text-xl font-bold text-honey-700">
-            {product.price.toFixed(2)} €
-          </span>
+          <div>
+            <span className="text-xl font-bold text-honey-700">
+              {product.price.toFixed(2)} €
+            </span>
+            {product.originalPrice && (
+              <span className="ml-2 text-sm text-gray-400 line-through">
+                {product.originalPrice.toFixed(2)} €
+              </span>
+            )}
+          </div>
           <button
             onClick={handleAdd}
             disabled={added}

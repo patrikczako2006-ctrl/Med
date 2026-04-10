@@ -2,13 +2,44 @@
 
 import { products } from '../../../data/products';
 import { useCart } from '../../../components/CartContext';
+import ProductCard from '../../../components/ProductCard';
 import { useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+const relatedCategoryMap = {
+  ule: ['ramiky', 'prislusenstvo'],
+  ramiky: ['ule', 'prislusenstvo'],
+  prislusenstvo: ['ule', 'ramiky'],
+  med: ['med', 'balicky'],
+  balicky: ['ule', 'med'],
+};
+
+function getRelatedProducts(product, allProducts, count = 3) {
+  const sameCategory = allProducts.filter(
+    (p) => p.category === product.category && p.id !== product.id
+  );
+  const complementCats = relatedCategoryMap[product.category] || [];
+  const complements = allProducts.filter(
+    (p) => complementCats.includes(p.category) && p.id !== product.id
+  );
+  const combined = [...sameCategory, ...complements];
+  const seen = new Set();
+  const result = [];
+  for (const p of combined) {
+    if (!seen.has(p.id) && result.length < count) {
+      seen.add(p.id);
+      result.push(p);
+    }
+  }
+  return result;
+}
+
 export default function ProductDetailPage({ params }) {
   const product = products.find((p) => p.slug === params.slug);
   if (!product) notFound();
+
+  const related = getRelatedProducts(product, products);
 
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
@@ -25,6 +56,7 @@ export default function ProductDetailPage({ params }) {
     ramiky: '🔲',
     prislusenstvo: '🔧',
     med: '🍯',
+    balicky: '🎁',
   };
 
   return (
@@ -123,6 +155,18 @@ export default function ProductDetailPage({ params }) {
           ← Späť na produkty
         </Link>
       </div>
+
+      {/* Related products */}
+      {related.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-bold text-gray-900 mb-5">Mohlo by vás zaujímať</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

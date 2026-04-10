@@ -6,8 +6,11 @@ import Link from 'next/link';
 export default function CartPage() {
   const { items, totalPrice, removeItem, updateQuantity } = useCart();
 
-  const shippingFee = totalPrice > 0 && totalPrice < 60 ? 4.5 : 0;
+  const FREE_SHIPPING_THRESHOLD = 60;
+  const shippingFee = totalPrice > 0 && totalPrice < FREE_SHIPPING_THRESHOLD ? 4.5 : 0;
   const grandTotal = totalPrice + shippingFee;
+  const missingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - totalPrice);
+  const shippingProgress = Math.min(100, (totalPrice / FREE_SHIPPING_THRESHOLD) * 100);
 
   if (items.length === 0) {
     return (
@@ -88,6 +91,30 @@ export default function CartPage() {
           <div className="bg-white rounded-2xl p-6 border border-gray-100 sticky top-20">
             <h2 className="font-bold text-gray-900 mb-4">Súhrn objednávky</h2>
 
+            {/* Free shipping progress */}
+            <div className="mb-4">
+              {missingForFreeShipping > 0 ? (
+                <>
+                  <p className="text-xs text-gray-600 mb-1.5">
+                    Do dopravy zdarma chýba{' '}
+                    <span className="font-semibold text-honey-700">
+                      {missingForFreeShipping.toFixed(2)} €
+                    </span>
+                  </p>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div
+                      className="bg-honey-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${shippingProgress}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-green-600 font-medium">
+                  Doprava zdarma
+                </p>
+              )}
+            </div>
+
             <div className="space-y-2 text-sm mb-4">
               <div className="flex justify-between">
                 <span className="text-gray-600">Medzisuček</span>
@@ -103,11 +130,6 @@ export default function CartPage() {
                   )}
                 </span>
               </div>
-              {shippingFee > 0 && (
-                <p className="text-xs text-gray-400">
-                  Doprava zdarma pri objednávke nad 60 €
-                </p>
-              )}
             </div>
 
             <div className="border-t border-gray-100 pt-3 mb-5">

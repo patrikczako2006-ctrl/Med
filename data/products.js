@@ -3,6 +3,7 @@ export const categories = [
   { id: 'ramiky', name: 'Rámiky', icon: '🔲' },
   { id: 'prislusenstvo', name: 'Príslušenstvo', icon: '🔧' },
   { id: 'med', name: 'Med a včelie produkty', icon: '🍯' },
+  { id: 'balicky', name: 'Výhodné balíčky', icon: '🎁' },
 ];
 
 export const products = [
@@ -213,6 +214,62 @@ export const products = [
       'Skladovanie: chladné a suché miesto',
     ],
     stock: 25,
+  },
+
+  // BALICKY
+  {
+    id: 14,
+    slug: 'startovaci-balicek-langstroth',
+    name: 'Štartovací balíček – Langstroth',
+    category: 'balicky',
+    price: 105,
+    originalPrice: 117,
+    description:
+      'Všetko čo potrebujete na začiatok: Langstrothov úľ, sada rámikov LG 159 a stropné kŕmidlo. Ušetríte 12 € oproti kúpe jednotlivo.',
+    details: [
+      'Úľ Langstroth – základný typ (85 €)',
+      'Rámiky LG 159 – 10 ks (19 €)',
+      'Stropné kŕmidlo (13 €)',
+      'Ušetríte 12 € oproti kúpe jednotlivo',
+    ],
+    stock: 8,
+    isBundle: true,
+  },
+  {
+    id: 15,
+    slug: 'startovaci-balicek-b-typ',
+    name: 'Štartovací balíček – B-typ',
+    category: 'balicky',
+    price: 93,
+    originalPrice: 104,
+    description:
+      'Kompletný štart pre nového včelára: B-typ úľ, sada rámikov B a stropné kŕmidlo. Ušetríte 11 € oproti kúpe jednotlivo.',
+    details: [
+      'Úľ B-typ – základný typ (75 €)',
+      'Rámiky B – 10 ks (16 €)',
+      'Stropné kŕmidlo (13 €)',
+      'Ušetríte 11 € oproti kúpe jednotlivo',
+    ],
+    stock: 8,
+    isBundle: true,
+  },
+  {
+    id: 16,
+    slug: 'medovy-balicek-3x',
+    name: 'Medový balíček – 3 × 0,9 kg',
+    category: 'balicky',
+    price: 21,
+    originalPrice: 25,
+    description:
+      'Výhodný balíček prírodného medu: 2× kvetový med a 1× krémový med. Ideálny darček alebo zásoba pre celú rodinu. Ušetríte 4 €.',
+    details: [
+      '2× Kvetový med 0,9 kg',
+      '1× Krémový med 0,9 kg',
+      'Celkovo 2,7 kg prírodného medu',
+      'Ušetríte 4 € oproti kúpe jednotlivo',
+    ],
+    stock: 20,
+    isBundle: true,
   },
 ];
 
