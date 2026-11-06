@@ -1,22 +1,150 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Base size is 18 px (most of our customers are older beekeepers).
+ * The "Väčšie písmo" button switches it to 21 px; everything is in rem,
+ * so the whole page scales together.
+ */
 @layer base {
   html {
+    font-size: 112.5%;
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  html[data-size='large'] {
+    font-size: 131.25%;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
   body {
-    @apply text-gray-800;
+    @apply bg-paper text-ink font-sans antialiased;
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-serif text-ink;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  /* Clearly visible keyboard focus */
+  :focus-visible {
+    outline: 3px solid #b87708;
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  /* Jump links must not end up hidden under the sticky header */
+  [id] {
+    scroll-margin-top: 10rem;
+  }
+  ::selection {
+    background: #f1d892;
   }
 }
 
-@layer utilities {
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+/* Smallest phones with big text: keep the header on one line */
+@media (max-width: 359px) {
+  html[data-size='large'] .cart-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  html[data-size='large'] header .container-page {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-page px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Buttons – at least 52 px high, always with a text label */
+  .btn {
+    @apply inline-flex min-h-[3.25rem] items-center justify-center gap-2.5 rounded-xl px-6 text-lg font-bold leading-tight transition-colors duration-150 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-honey-400 text-ink shadow-[inset_0_-3px_0_rgba(140,90,7,.35)] hover:bg-honey-300 active:bg-honey-500 disabled:bg-wax-200 disabled:text-ink-soft disabled:shadow-none;
+  }
+  .btn-dark {
+    @apply btn bg-bark-700 text-cream hover:bg-bark-800 active:bg-bark-900;
+  }
+  .btn-outline {
+    @apply btn border-2 border-bark-600 bg-cream text-bark-800 hover:bg-wax-50;
+  }
+
+  .link {
+    @apply font-semibold text-bark-700 underline decoration-2 underline-offset-4 hover:text-bark-900 hover:decoration-honey-500;
+  }
+
+  .card {
+    @apply rounded-2xl border border-wax-200 bg-cream shadow-card;
+  }
+
+  .eyebrow {
+    @apply text-base font-bold uppercase tracking-[0.12em] text-honey-700;
+  }
+
+  .honeycomb {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.2v32.4L28 64.8 0 48.6V16.2zM28 97V64.8M0 48.6V97M56 48.6V97' fill='none' stroke='%23B87708' stroke-opacity='.13' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-size: 56px 97px;
+  }
+
+  /* Form fields */
+  .field-label {
+    @apply mb-1.5 block text-lg font-semibold text-ink;
+  }
+  .field-input {
+    @apply block min-h-[3.25rem] w-full rounded-xl border-2 border-bark-500/40 bg-white px-4 text-lg text-ink placeholder:text-ink-soft/60 focus:border-honey-600 focus:outline-none focus:ring-4 focus:ring-honey-300/50;
+  }
+  .field-input[aria-invalid='true'] {
+    @apply border-alert-600 bg-alert-50;
+  }
+  .field-error {
+    @apply mt-1.5 flex items-center gap-1.5 text-base font-semibold text-alert-600;
+  }
+
+  /* Legal pages typography */
+  .legal {
+    @apply space-y-10 text-lg leading-relaxed text-ink;
+  }
+  .legal h2 {
+    @apply mb-3 text-2xl font-bold;
+  }
+  .legal p + p {
+    @apply mt-3;
+  }
+  .legal ul {
+    @apply mt-2 list-disc space-y-1.5 pl-6 marker:text-honey-600;
+  }
+  .legal ol {
+    @apply mt-2 list-decimal space-y-2 pl-6 marker:font-bold marker:text-bark-700;
+  }
+  .legal a {
+    @apply link;
+  }
+  .legal table {
+    @apply w-full border-collapse text-base;
+  }
+  .legal th,
+  .legal td {
+    @apply border border-wax-200 p-3 text-left align-top;
+  }
+  .legal th {
+    @apply bg-wax-100 font-bold;
   }
 }

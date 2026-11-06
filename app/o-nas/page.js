@@ -1,89 +1,71 @@
+import Link from 'next/link';
+import PageHeader from '../../components/PageHeader';
+import CallBox from '../../components/CallBox';
+import { HeroScene } from '../../components/Art';
+import Icon from '../../components/Icons';
+import { site } from '../../lib/site';
+
 export const metadata = {
   title: 'O nás',
-  description: 'Milan Krokavec – výroba včelárskych potrieb a predaj medu z Kraskova.',
+  description: 'Milan Krokavec – výroba úľov a včelárskych potrieb a predaj medu z Kraskova.',
 };
+
+const values = [
+  { icon: 'wood', title: 'Kvalitné drevo', text: 'Sušené smrekové a borovicové drevo, steny hrubé 25 mm. Úle vydržia roky.' },
+  { icon: 'jar', title: 'Poctivý med', text: 'Z vlastných úľov, nefiltrovaný a bez akýchkoľvek prímesí.' },
+  { icon: 'handshake', title: 'Osobný prístup', text: 'Poradíme s výberom úľa aj rámikov. Pokojne nám zavolajte.' },
+];
 
 export default function AboutPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">O nás</h1>
+    <>
+      <PageHeader eyebrow="O nás" title="Včelárstvo Krokavec z Kraskova" crumbs={[{ href: '/', label: 'Domov' }, { label: 'O nás' }]} />
 
-      {/* Hero */}
-      <div className="bg-honey-800 text-white rounded-2xl p-8 mb-10 flex flex-col md:flex-row items-center gap-6">
-        <div className="text-7xl flex-shrink-0">🧑‍🌾</div>
-        <div>
-          <h2 className="text-2xl font-bold mb-2">Milan Krokavec</h2>
-          <p className="text-honey-200 leading-relaxed">
-            Pochádzam z Kraskova a včelárstvu sa venujem s vášňou a tradíciou.
-            Vyrábam včelárske potreby z kvalitného sušeného dreva a predávam
-            prírodný med priamo z vlastných úľov. Každý výrobok je robený
-            s dôrazom na kvalitu a trvanlivosť.
-          </p>
+      <div className="container-page py-12 sm:py-16">
+        <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="space-y-5 text-xl leading-relaxed">
+            <p className="font-serif text-2xl font-semibold leading-snug text-bark-800">
+              Včelárstvo je pre nás viac než remeslo – je to spôsob života.
+            </p>
+            <p>
+              Včeláreniu sa v Kraskove venujeme dlhé roky. Postupne sme začali vyrábať aj vlastné včelárske potreby,
+              pretože sme chceli úle, na ktoré sa dá spoľahnúť.
+            </p>
+            <p>
+              Vyrábame úle Langstroth a B-typ zo sušeného smrekového a borovicového dreva s hrúbkou stien 25 mm. Každý
+              úľ pred odoslaním dôkladne skontrolujeme. Okrem úľov vyrábame aj rámiky, nadstavky a ďalšie príslušenstvo.
+            </p>
+            <p>
+              Med zbierame z vlastných úľov v čistom prostredí slovenského vidieka. Je prírodný, nefiltrovaný a bez
+              akýchkoľvek prímesí. Ponúkame kvetový a krémový med aj včelí peľ.
+            </p>
+          </div>
+          <HeroScene className="w-full rounded-[28px] shadow-lift" />
+        </div>
+
+        <ul className="mt-16 grid gap-6 md:grid-cols-3">
+          {values.map((v) => (
+            <li key={v.title} className="card p-7">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-honey-400 text-ink">
+                <Icon name={v.icon} className="h-8 w-8" />
+              </span>
+              <h2 className="mt-4 text-2xl font-bold">{v.title}</h2>
+              <p className="mt-2 text-lg text-ink-soft">{v.text}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-16 grid gap-6 lg:grid-cols-2">
+          <CallBox title="Začínate so včelami?" text="Radi poradíme, aký úľ a koľko rámikov potrebujete. Stačí zavolať." />
+          <div className="card flex flex-col justify-center p-8">
+            <h2 className="text-2xl font-bold">Pozrite si našu ponuku</h2>
+            <p className="mt-2 text-lg text-ink-soft">Úle, nadstavky, rámiky, príslušenstvo a med z Kraskova.</p>
+            <Link href="/produkty" className="btn-primary mt-5 self-start">
+              Prejsť na ponuku <Icon name="arrowRight" />
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Story */}
-      <div className="prose text-gray-700 text-sm leading-relaxed space-y-4 mb-10">
-        <p>
-          Včelárstvo je pre nás viac než remeslo – je to životný štýl. Naša rodina
-          sa včeláreniu venuje dlhé roky a postupne sme rozšírili svoju činnosť
-          o výrobu vlastných včelárskych potrieb.
-        </p>
-        <p>
-          Vyrábame Langstrothove a B-type úle z sušeného smrekového a borovicového
-          dreva s hrúbkou stien 25 mm. Každý úľ prechádza dôkladnou kontrolou pred
-          odoslaním. Okrem úľov vyrábame aj rámiky, nástavky, kŕmidlá a príslušenstvo.
-        </p>
-        <p>
-          Náš med zbierame z vlastných úľov umiestnených v čistom prostredí
-          slovenského vidieka. Med je prírodný, nefiltrovaný a bez akýchkoľvek
-          prímesí. Ponúkame kvetový med, krémový med a včelí peľ.
-        </p>
-        <p>
-          Radi poradíme začínajúcim včelárom pri výbere vhodného úľa
-          a konfigurácie pre ich podmienky. Neváhajte nás kontaktovať.
-        </p>
-      </div>
-
-      {/* Values */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
-        {[
-          {
-            icon: '🪵',
-            title: 'Kvalitné drevo',
-            desc: 'Sušené smrekové a borovicové drevo, hrúbka stien 25 mm.',
-          },
-          {
-            icon: '🍯',
-            title: 'Prírodný med',
-            desc: 'Zbieraný z vlastných úľov, nefiltrovaný, bez prímesí.',
-          },
-          {
-            icon: '🤝',
-            title: 'Osobný prístup',
-            desc: 'Poradenstvo a podpora pre každého zákazníka.',
-          },
-        ].map((v) => (
-          <div key={v.title} className="bg-white rounded-2xl p-6 border border-gray-100 text-center">
-            <div className="text-4xl mb-3">{v.icon}</div>
-            <h3 className="font-bold text-gray-900 mb-1">{v.title}</h3>
-            <p className="text-gray-500 text-sm">{v.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* CTA */}
-      <div className="bg-honey-50 rounded-2xl p-6 border border-honey-200 text-center">
-        <p className="text-gray-700 mb-3">
-          Máte otázky alebo si chcete niečo špeciálne objednať?
-        </p>
-        <a
-          href="/kontakt"
-          className="inline-block bg-honey-500 hover:bg-honey-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors"
-        >
-          Kontaktujte nás
-        </a>
-      </div>
-    </div>
+    </>
   );
 }

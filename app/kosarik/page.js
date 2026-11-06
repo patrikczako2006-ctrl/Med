@@ -1,139 +1,117 @@
 'use client';
 
-import { useCart } from '../../components/CartContext';
 import Link from 'next/link';
+import { useCart } from '../../components/CartContext';
+import { ProductArt } from '../../components/Art';
+import QuantityStepper from '../../components/QuantityStepper';
+import PageHeader from '../../components/PageHeader';
+import CallBox from '../../components/CallBox';
+import Icon from '../../components/Icons';
+import { FREE_SHIPPING_FROM, SHIPPING_FEE, MAX_QTY, formatPrice } from '../../lib/pricing';
 
 export default function CartPage() {
-  const { items, totalPrice, removeItem, updateQuantity } = useCart();
-
-  const shippingFee = totalPrice > 0 && totalPrice < 60 ? 4.5 : 0;
-  const grandTotal = totalPrice + shippingFee;
-
-  if (items.length === 0) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">🛒</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Košík je prázdny</h1>
-        <p className="text-gray-500 mb-6">Pridajte produkty do košíka a potom pokračujte k objednávke.</p>
-        <Link
-          href="/produkty"
-          className="bg-honey-500 hover:bg-honey-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-        >
-          Prezrieť produkty
-        </Link>
-      </div>
-    );
-  }
+  const { lines, subtotal, ready, setQuantity, removeItem } = useCart();
+  const missing = Math.max(0, FREE_SHIPPING_FROM - subtotal);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Košík</h1>
+    <>
+      <PageHeader title="Košík" crumbs={[{ href: '/', label: 'Domov' }, { label: 'Košík' }]} />
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Items */}
-        <div className="flex-1 space-y-3">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl p-5 border border-gray-100 flex items-center gap-4"
-            >
-              <div className="text-3xl flex-shrink-0">
-                {item.category === 'med' ? '🍯' : item.category === 'ule' ? '🏠' : item.category === 'ramiky' ? '🔲' : '🔧'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{item.name}</p>
-                <p className="text-honey-600 font-medium">{item.price.toFixed(2)} € / ks</p>
-              </div>
-
-              {/* Quantity */}
-              <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden flex-shrink-0">
-                <button
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="px-2.5 py-1.5 text-gray-600 hover:bg-gray-100 transition-colors font-bold text-sm"
-                >
-                  −
-                </button>
-                <span className="px-3 py-1.5 text-sm font-medium text-gray-800">
-                  {item.quantity}
-                </span>
-                <button
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="px-2.5 py-1.5 text-gray-600 hover:bg-gray-100 transition-colors font-bold text-sm"
-                >
-                  +
-                </button>
-              </div>
-
-              <div className="text-right flex-shrink-0 w-20">
-                <p className="font-bold text-gray-900">
-                  {(item.price * item.quantity).toFixed(2)} €
-                </p>
-              </div>
-
-              <button
-                onClick={() => removeItem(item.id)}
-                className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                aria-label="Odstrániť"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Summary */}
-        <div className="lg:w-72">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 sticky top-20">
-            <h2 className="font-bold text-gray-900 mb-4">Súhrn objednávky</h2>
-
-            <div className="space-y-2 text-sm mb-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Medzisuček</span>
-                <span>{totalPrice.toFixed(2)} €</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Doprava</span>
-                <span>
-                  {shippingFee === 0 ? (
-                    <span className="text-green-600">Zdarma</span>
-                  ) : (
-                    `${shippingFee.toFixed(2)} €`
-                  )}
-                </span>
-              </div>
-              {shippingFee > 0 && (
-                <p className="text-xs text-gray-400">
-                  Doprava zdarma pri objednávke nad 60 €
-                </p>
-              )}
-            </div>
-
-            <div className="border-t border-gray-100 pt-3 mb-5">
-              <div className="flex justify-between font-bold text-lg">
-                <span>Celkom</span>
-                <span className="text-honey-700">{grandTotal.toFixed(2)} €</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">Vrátane DPH</p>
-            </div>
-
-            <Link
-              href="/objednavka"
-              className="block w-full bg-honey-500 hover:bg-honey-600 text-white font-semibold py-3 rounded-xl text-center transition-colors"
-            >
-              Pokračovať k objednávke
-            </Link>
-
-            <Link
-              href="/produkty"
-              className="block w-full text-center text-gray-500 hover:text-honey-600 text-sm mt-3 transition-colors"
-            >
-              Pokračovať v nákupe
+      <div className="container-page py-10 sm:py-14">
+        {!ready ? (
+          <p className="py-16 text-center text-xl text-ink-soft">Načítavam košík…</p>
+        ) : lines.length === 0 ? (
+          <div className="card mx-auto max-w-2xl p-10 text-center">
+            <ProductArt art="honey" className="mx-auto h-40 w-56" />
+            <h2 className="mt-4 text-3xl font-bold">Košík je zatiaľ prázdny</h2>
+            <p className="mt-2 text-xl text-ink-soft">Vyberte si z našej ponuky úľov, rámikov a medu.</p>
+            <Link href="/produkty" className="btn-primary mt-6">
+              Pozrieť ponuku <Icon name="arrowRight" />
             </Link>
           </div>
-        </div>
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-[1fr_24rem] lg:items-start [&>*]:min-w-0">
+            <section aria-label="Tovar v košíku">
+              <ul className="space-y-4">
+                {lines.map((l) => (
+                  <li key={l.key} className="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+                    <div className="flex flex-1 items-center gap-4">
+                      <div className="honeycomb flex h-24 w-28 flex-shrink-0 items-center justify-center rounded-xl bg-wax-100">
+                        <ProductArt art={l.product.art} className="h-20 w-24" />
+                      </div>
+                      <div className="min-w-0">
+                        <Link href={`/produkty/${l.product.slug}`} className="text-xl font-bold hover:underline">
+                          {l.product.name}
+                        </Link>
+                        {l.variant && <p className="text-lg text-ink-soft">Typ úľa: <strong>{l.variant}</strong></p>}
+                        <p className="text-lg text-ink-soft">{formatPrice(l.product.price)} / ks</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-wax-200 pt-4 sm:border-0 sm:pt-0">
+                      <QuantityStepper
+                        value={l.quantity}
+                        max={Math.min(l.product.stock, MAX_QTY)}
+                        onChange={(v) => setQuantity(l.key, Math.max(1, v))}
+                        size="md"
+                        label={`Počet kusov – ${l.product.name}`}
+                      />
+                      <p className="min-w-[6.5rem] text-right font-serif text-2xl font-bold">{formatPrice(l.lineTotal)}</p>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(l.key)}
+                        className="inline-flex min-h-[3rem] items-center gap-1.5 rounded-xl px-3 text-lg font-semibold text-alert-600 hover:bg-alert-50"
+                      >
+                        <Icon name="trash" className="h-5 w-5" /> Odstrániť
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/produkty" className="btn-outline mt-6">
+                <Icon name="arrowLeft" className="h-5 w-5" /> Pokračovať v nákupe
+              </Link>
+            </section>
+
+            <aside className="space-y-6 lg:sticky lg:top-40">
+              <div className="card p-6">
+                <h2 className="mb-4 text-2xl font-bold">Súhrn</h2>
+                <dl className="space-y-2 text-lg">
+                  <div className="flex justify-between">
+                    <dt>Tovar spolu</dt>
+                    <dd className="font-bold">{formatPrice(subtotal)}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt>Doprava kuriérom</dt>
+                    <dd className="font-bold">{missing === 0 ? <span className="text-meadow-600">zdarma</span> : formatPrice(SHIPPING_FEE)}</dd>
+                  </div>
+                </dl>
+                {missing > 0 ? (
+                  <div className="mt-4 rounded-xl bg-wax-50 p-4">
+                    <p className="text-lg">
+                      Do dopravy zdarma vám chýba <strong>{formatPrice(missing)}</strong>.
+                    </p>
+                    <div className="mt-2 h-3 overflow-hidden rounded-full bg-wax-200" aria-hidden="true">
+                      <div className="h-full rounded-full bg-honey-500" style={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING_FROM) * 100)}%` }} />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-4 flex items-center gap-2 rounded-xl bg-meadow-50 p-4 text-lg font-semibold text-meadow-700">
+                    <Icon name="check" strokeWidth={3} /> Máte dopravu zdarma
+                  </p>
+                )}
+                <p className="mt-4 text-base text-ink-soft">
+                  Pri osobnom odbere v Kraskove je doprava vždy zdarma. Spôsob dopravy si vyberiete v ďalšom kroku.
+                </p>
+                <Link href="/objednavka" className="btn-primary mt-6 w-full !text-xl">
+                  Pokračovať k objednávke <Icon name="arrowRight" />
+                </Link>
+              </div>
+              <CallBox title="Potrebujete poradiť?" text="Zavolajte nám, s objednávkou radi pomôžeme." />
+            </aside>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }

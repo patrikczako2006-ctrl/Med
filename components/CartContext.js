@@ -1,98 +1,93 @@
 'use client';
 
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react';
+import { lineKey, priceCart, MAX_QTY } from '../lib/pricing';
+import { getProductById } from '../data/products';
 
+const STORAGE_KEY = 'krokavec-cart';
 const CartContext = createContext(null);
 
-function cartReducer(state, action) {
+// The cart only remembers WHAT and HOW MANY. Prices always come from
+// data/products.js, so a price change can never leave stale prices in a cart.
+function clampQty(id, qty) {
+  const product = getProductById(id);
+  const max = Math.min(product?.stock ?? 0, MAX_QTY);
+  return Math.max(0, Math.min(Math.floor(qty), max));
+}
+
+function reducer(items, action) {
   switch (action.type) {
-    case 'ADD_ITEM': {
-      const existing = state.items.find((i) => i.id === action.product.id);
+    case 'add': {
+      const key = lineKey(action.id, action.variant);
+      const existing = items.find((i) => lineKey(i.id, i.variant) === key);
       if (existing) {
-        return {
-          ...state,
-          items: state.items.map((i) =>
-            i.id === action.product.id
-              ? { ...i, quantity: i.quantity + 1 }
-              : i
-          ),
-        };
+        return items.map((i) =>
+          i === existing ? { ...i, quantity: clampQty(i.id, i.quantity + action.quantity) } : i
+        );
       }
-      return {
-        ...state,
-        items: [...state.items, { ...action.product, quantity: 1 }],
-      };
+      const quantity = clampQty(action.id, action.quantity);
+      if (!quantity) return items;
+      return [...items, { id: action.id, variant: action.variant || null, quantity }];
     }
-    case 'REMOVE_ITEM':
-      return {
-        ...state,
-        items: state.items.filter((i) => i.id !== action.id),
-      };
-    case 'UPDATE_QUANTITY': {
-      if (action.quantity <= 0) {
-        return {
-          ...state,
-          items: state.items.filter((i) => i.id !== action.id),
-        };
-      }
-      return {
-        ...state,
-        items: state.items.map((i) =>
-          i.id === action.id ? { ...i, quantity: action.quantity } : i
-        ),
-      };
+    case 'set': {
+      return items
+        .map((i) =>
+          lineKey(i.id, i.variant) === action.key
+            ? { ...i, quantity: clampQty(i.id, action.quantity) }
+            : i
+        )
+        .filter((i) => i.quantity > 0);
     }
-    case 'CLEAR_CART':
-      return { ...state, items: [] };
-    case 'LOAD_CART':
-      return { ...state, items: action.items };
+    case 'remove':
+      return items.filter((i) => lineKey(i.id, i.variant) !== action.key);
+    case 'clear':
+      return [];
+    case 'load':
+      return action.items;
     default:
-      return state;
+      return items;
   }
 }
 
 export function CartProvider({ children }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+  const [items, dispatch] = useReducer(reducer, []);
+  const [ready, setReady] = useState(false);
 
-  // Load from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('krokavec-cart');
-      if (saved) {
-        dispatch({ type: 'LOAD_CART', items: JSON.parse(saved) });
-      }
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const { lines } = priceCart(saved);
+      dispatch({
+        type: 'load',
+        items: lines.map((l) => ({ id: l.product.id, variant: l.variant, quantity: l.quantity })),
+      });
     } catch {}
+    setReady(true);
   }, []);
 
-  // Save to localStorage on change
   useEffect(() => {
+    if (!ready) return;
     try {
-      localStorage.setItem('krokavec-cart', JSON.stringify(state.items));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {}
-  }, [state.items]);
+  }, [items, ready]);
 
-  const totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = state.items.reduce(
-    (sum, i) => sum + i.price * i.quantity,
-    0
-  );
+  const value = useMemo(() => {
+    const { lines, subtotal } = priceCart(items);
+    return {
+      ready,
+      items,
+      lines,
+      subtotal,
+      totalItems: lines.reduce((s, l) => s + l.quantity, 0),
+      addItem: (id, quantity = 1, variant = null) => dispatch({ type: 'add', id, quantity, variant }),
+      setQuantity: (key, quantity) => dispatch({ type: 'set', key, quantity }),
+      removeItem: (key) => dispatch({ type: 'remove', key }),
+      clearCart: () => dispatch({ type: 'clear' }),
+    };
+  }, [items, ready]);
 
-  return (
-    <CartContext.Provider
-      value={{
-        items: state.items,
-        totalItems,
-        totalPrice,
-        addItem: (product) => dispatch({ type: 'ADD_ITEM', product }),
-        removeItem: (id) => dispatch({ type: 'REMOVE_ITEM', id }),
-        updateQuantity: (id, quantity) =>
-          dispatch({ type: 'UPDATE_QUANTITY', id, quantity }),
-        clearCart: () => dispatch({ type: 'CLEAR_CART' }),
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

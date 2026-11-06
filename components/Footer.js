@@ -1,91 +1,88 @@
 import Link from 'next/link';
+import { site } from '../lib/site';
+import { LogoMark } from './Art';
+import Icon from './Icons';
 
 export default function Footer() {
   return (
-    <footer className="bg-honey-900 text-honey-100 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">🐝</span>
-              <span className="font-bold text-white text-lg">Krokavec</span>
-            </div>
-            <p className="text-honey-300 text-sm leading-relaxed">
-              Výroba včelárskych potrieb a predaj medu z Kraskova. Tradičná
-              výroba s dôrazom na kvalitu.
-            </p>
+    <footer className="mt-auto bg-bark-900 text-wax-100">
+      <div className="container-page grid gap-10 py-14 text-lg sm:grid-cols-2 lg:grid-cols-4">
+        <div className="lg:col-span-1">
+          <div className="mb-4 flex items-center gap-3">
+            <LogoMark className="h-12 w-12" />
+            <span className="font-serif text-2xl font-bold text-cream">{site.name}</span>
           </div>
-
-          {/* Links */}
-          <div>
-            <h3 className="font-semibold text-white mb-3">Rýchle odkazy</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/produkty" className="text-honey-300 hover:text-white transition-colors">
-                  Produkty
-                </Link>
-              </li>
-              <li>
-                <Link href="/o-nas" className="text-honey-300 hover:text-white transition-colors">
-                  O nás
-                </Link>
-              </li>
-              <li>
-                <Link href="/kontakt" className="text-honey-300 hover:text-white transition-colors">
-                  Kontakt
-                </Link>
-              </li>
-              <li>
-                <Link href="/kosarik" className="text-honey-300 hover:text-white transition-colors">
-                  Košík
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal & Contact */}
-          <div>
-            <h3 className="font-semibold text-white mb-3">Informácie</h3>
-            <ul className="space-y-2 text-sm mb-4">
-              <li>
-                <Link href="/vop" className="text-honey-300 hover:text-white transition-colors">
-                  Obchodné podmienky
-                </Link>
-              </li>
-              <li>
-                <Link href="/ochrana-udajov" className="text-honey-300 hover:text-white transition-colors">
-                  Ochrana osobných údajov
-                </Link>
-              </li>
-              <li>
-                <Link href="/reklamacny-poriadok" className="text-honey-300 hover:text-white transition-colors">
-                  Reklamačný poriadok
-                </Link>
-              </li>
-            </ul>
-            <div className="text-honey-300 text-sm space-y-1">
-              <p>Milan Krokavec</p>
-              <p>Kraskovo 81, 980 26 Kraskovo</p>
-              <p>
-                <a href="tel:+421911768758" className="hover:text-white transition-colors">
-                  0911 768 758
-                </a>
-              </p>
-              <p>
-                <a href="mailto:milan@krokavec.sk" className="hover:text-white transition-colors">
-                  milan@krokavec.sk
-                </a>
-              </p>
-            </div>
-          </div>
+          <p className="text-wax-200">
+            Úle a včelárske potreby z vlastnej dielne a med z vlastných úľov v Kraskove.
+          </p>
         </div>
 
-        <div className="border-t border-honey-800 mt-8 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-honey-400">
-          <p>© {new Date().getFullYear()} Milan Krokavec – Včelárstvo. Všetky práva vyhradené.</p>
-          <p>IČO: doplniť | DIČ: doplniť</p>
+        <div>
+          <h2 className="mb-4 font-serif text-xl font-bold text-cream">Obchod</h2>
+          <ul className="space-y-2.5">
+            <FooterLink href="/produkty">Celá ponuka</FooterLink>
+            <FooterLink href="/produkty?kategoria=ule">Úle a nadstavky</FooterLink>
+            <FooterLink href="/produkty?kategoria=med">Med a peľ</FooterLink>
+            <FooterLink href="/kosarik">Košík</FooterLink>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="mb-4 font-serif text-xl font-bold text-cream">Informácie</h2>
+          <ul className="space-y-2.5">
+            <FooterLink href="/o-nas">O nás</FooterLink>
+            <FooterLink href="/vop">Obchodné podmienky</FooterLink>
+            <FooterLink href="/reklamacny-poriadok">Reklamačný poriadok</FooterLink>
+            <FooterLink href="/ochrana-udajov">Ochrana osobných údajov</FooterLink>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="mb-4 font-serif text-xl font-bold text-cream">Kontakt</h2>
+          <address className="space-y-3 not-italic">
+            <p>
+              {site.owner}
+              <br />
+              {site.street}, {site.zip} {site.city}
+            </p>
+            <a href={site.phoneHref} className="flex items-center gap-2 font-bold text-honey-300 hover:text-honey-400">
+              <Icon name="phone" className="h-5 w-5" /> {site.phone}
+            </a>
+            <a href={`mailto:${site.email}`} className="flex items-center gap-2 hover:text-cream">
+              <Icon name="mail" className="h-5 w-5" /> {site.email}
+            </a>
+            <a href={site.facebook} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-cream">
+              <Icon name="facebook" className="h-5 w-5" /> Facebook
+            </a>
+          </address>
+        </div>
+      </div>
+
+      <div className="border-t border-bark-700">
+        <div className="container-page flex flex-col gap-2 py-6 text-base text-wax-200 sm:flex-row sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} {site.owner} – Včelárstvo
+          </p>
+          {(site.ico || site.dic) && (
+            <p>
+              {site.ico && <>IČO: {site.ico}</>}
+              {site.ico && site.dic && ' · '}
+              {site.dic && <>DIČ: {site.dic}</>}
+            </p>
+          )}
+          <p>Nie sme platiteľmi DPH.</p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterLink({ href, children }) {
+  return (
+    <li>
+      <Link href={href} className="underline-offset-4 hover:text-cream hover:underline">
+        {children}
+      </Link>
+    </li>
   );
 }

@@ -1,17 +1,24 @@
 import Link from 'next/link';
+import { ProductArt } from '../components/Art';
+import { site } from '../lib/site';
+
+export const metadata = { title: 'Stránka sa nenašla' };
 
 export default function NotFound() {
   return (
-    <div className="max-w-xl mx-auto px-4 py-24 text-center">
-      <div className="text-6xl mb-4">🐝</div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Stránka nenájdená</h1>
-      <p className="text-gray-500 mb-8">Požadovaná stránka neexistuje alebo bola presunutá.</p>
-      <Link
-        href="/"
-        className="bg-honey-500 hover:bg-honey-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-      >
-        Späť na domovskú stránku
-      </Link>
+    <div className="container-page py-20">
+      <div className="card mx-auto max-w-xl p-10 text-center">
+        <ProductArt art="frames" className="mx-auto h-40 w-56" />
+        <h1 className="mt-4 text-4xl font-bold">Stránka sa nenašla</h1>
+        <p className="mt-3 text-xl text-ink-soft">
+          Táto stránka neexistuje alebo bola presunutá. Skúste začať od úvodnej stránky, alebo nám zavolajte na{' '}
+          <a href={site.phoneHref} className="link">{site.phone}</a>.
+        </p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link href="/" className="btn-primary">Úvodná stránka</Link>
+          <Link href="/produkty" className="btn-outline">Ponuka</Link>
+        </div>
+      </div>
     </div>
   );
 }

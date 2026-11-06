@@ -1,378 +1,391 @@
 'use client';
 
-import { useState } from 'react';
-import { useCart } from '../../components/CartContext';
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import { useCart } from '../../components/CartContext';
+import PageHeader from '../../components/PageHeader';
+import Icon from '../../components/Icons';
+import { site } from '../../lib/site';
+import { DELIVERY, PAYMENT, paymentsFor, priceOrder, formatPrice, FREE_SHIPPING_FROM } from '../../lib/pricing';
+import { validateOrderForm } from '../../lib/validation';
 
-const INITIAL_FORM = {
+const INITIAL = {
   meno: '',
   priezvisko: '',
-  email: '',
   telefon: '',
+  email: '',
   ulica: '',
-  mesto: '',
   psc: '',
-  krajina: 'Slovensko',
-  sposobDopravy: 'kurier',
-  sposobPlatby: 'prevod',
+  mesto: '',
+  doprava: 'kurier',
+  platba: 'prevod',
   poznamka: '',
   suhlasVop: false,
-  suhlasGdpr: false,
+  web: '', // spam trap – real people never see or fill this
 };
 
+const FIELD_ORDER = ['meno', 'priezvisko', 'telefon', 'email', 'ulica', 'mesto', 'psc', 'suhlasVop'];
+
 export default function OrderPage() {
-  const { items, totalPrice, clearCart } = useCart();
-  const [form, setForm] = useState(INITIAL_FORM);
+  const { items, lines, ready, clearCart } = useCart();
+  const [form, setForm] = useState(INITIAL);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [result, setResult] = useState(null);
+  const summaryRef = useRef(null);
 
-  const shippingFee = totalPrice > 0 && totalPrice < 60 ? 4.5 : 0;
-  const grandTotal = totalPrice + shippingFee;
+  const order = priceOrder(items, form.doprava, form.platba);
+  const set = (name, value) => setForm((f) => ({ ...f, [name]: value }));
 
-  function validate() {
-    const e = {};
-    if (!form.meno.trim()) e.meno = 'Povinné pole';
-    if (!form.priezvisko.trim()) e.priezvisko = 'Povinné pole';
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
-      e.email = 'Zadajte platný e-mail';
-    if (!form.telefon.trim()) e.telefon = 'Povinné pole';
-    if (!form.ulica.trim()) e.ulica = 'Povinné pole';
-    if (!form.mesto.trim()) e.mesto = 'Povinné pole';
-    if (!form.psc.trim()) e.psc = 'Povinné pole';
-    if (!form.suhlasVop) e.suhlasVop = 'Musíte súhlasiť s obchodnými podmienkami';
-    if (!form.suhlasGdpr) e.suhlasGdpr = 'Musíte súhlasiť so spracovaním osobných údajov';
-    return e;
-  }
+  // Keep payment valid for the chosen delivery (e.g. no "dobierka" for pickup)
+  useEffect(() => {
+    const allowed = paymentsFor(form.doprava);
+    if (!allowed.includes(form.platba)) set('platba', allowed[0]);
+  }, [form.doprava, form.platba]);
+
+  useEffect(() => {
+    if (Object.keys(errors).length && summaryRef.current) {
+      summaryRef.current.focus({ preventScroll: true });
+      summaryRef.current.scrollIntoView({ block: 'start' });
+    }
+  }, [errors]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    setErrors({});
+    const errs = validateOrderForm(form);
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+
     setSubmitting(true);
     setServerError('');
-
     try {
       const res = await fetch('/api/objednavka', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ form, items, totalPrice, shippingFee, grandTotal }),
+        body: JSON.stringify({ form, items }),
       });
-
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
         clearCart();
-        setSuccess(true);
+        setResult(data);
+        window.scrollTo(0, 0);
       } else {
-        const data = await res.json();
-        setServerError(data.message || 'Nastala chyba. Skúste znova alebo kontaktujte predávajúceho.');
+        if (data.errors) setErrors(data.errors);
+        setServerError(data.message || 'Objednávku sa nepodarilo odoslať.');
       }
     } catch {
-      setServerError('Nastala sieťová chyba. Skúste znova.');
+      setServerError('Objednávku sa nepodarilo odoslať – skontrolujte pripojenie na internet a skúste znova.');
     } finally {
       setSubmitting(false);
     }
   }
 
-  function field(name, label, type = 'text', required = true) {
+  if (result) return <Success result={result} />;
+
+  if (!ready) {
+    return <p className="container-page py-24 text-center text-xl text-ink-soft">Načítavam…</p>;
+  }
+
+  if (lines.length === 0) {
     return (
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <input
-          type={type}
-          value={form[name]}
-          onChange={(ev) => setForm({ ...form, [name]: ev.target.value })}
-          className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-honey-400 ${
-            errors[name] ? 'border-red-400 bg-red-50' : 'border-gray-200'
-          }`}
-        />
-        {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+      <div className="container-page py-20">
+        <div className="card mx-auto max-w-xl p-10 text-center">
+          <h1 className="text-3xl font-bold">Košík je prázdny</h1>
+          <p className="mt-2 text-xl text-ink-soft">Najprv si vyberte tovar z ponuky.</p>
+          <Link href="/produkty" className="btn-primary mt-6">Pozrieť ponuku</Link>
+        </div>
       </div>
     );
   }
 
-  if (success) {
-    return (
-      <div className="max-w-xl mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">✅</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-3">
-          Objednávka odoslaná!
-        </h1>
-        <p className="text-gray-600 mb-2">
-          Ďakujeme za vašu objednávku. Potvrdenie sme odoslali na váš e-mail.
+  const errorList = FIELD_ORDER.filter((k) => errors[k]);
+  const field = (name, label, props = {}) => (
+    <div>
+      <label htmlFor={name} className="field-label">
+        {label} {props.required !== false && <span className="text-alert-600" aria-hidden="true">*</span>}
+      </label>
+      <input
+        id={name}
+        name={name}
+        value={form[name]}
+        onChange={(e) => set(name, e.target.value)}
+        aria-invalid={errors[name] ? 'true' : undefined}
+        aria-describedby={errors[name] ? `${name}-error` : props.hint ? `${name}-hint` : undefined}
+        className="field-input"
+        {...props}
+        required={props.required !== false}
+      />
+      {props.hint && !errors[name] && <p id={`${name}-hint`} className="mt-1 text-base text-ink-soft">{props.hint}</p>}
+      {errors[name] && (
+        <p id={`${name}-error`} className="field-error">
+          <Icon name="alert" className="h-5 w-5 flex-shrink-0" /> {errors[name]}
         </p>
-        <p className="text-gray-500 text-sm mb-8">
-          V prípade otázok nás kontaktujte na{' '}
-          <a href="mailto:milan@krokavec.sk" className="text-honey-600 underline">
-            milan@krokavec.sk
-          </a>{' '}
-          alebo{' '}
-          <a href="tel:+421911768758" className="text-honey-600 underline">
-            0911 768 758
-          </a>
-          .
-        </p>
-        <Link
-          href="/"
-          className="bg-honey-500 hover:bg-honey-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-        >
-          Späť na úvodnú stránku
-        </Link>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="max-w-xl mx-auto px-4 py-20 text-center">
-        <div className="text-5xl mb-4">🛒</div>
-        <p className="text-gray-600 mb-4">Váš košík je prázdny.</p>
-        <Link href="/produkty" className="bg-honey-500 text-white font-semibold px-6 py-3 rounded-xl">
-          Prejsť na produkty
-        </Link>
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Objednávka</h1>
+    <>
+      <PageHeader
+        title="Objednávka"
+        intro="Vyplňte, prosím, údaje nižšie. Polia označené hviezdičkou (*) sú povinné."
+        crumbs={[{ href: '/', label: 'Domov' }, { href: '/kosarik', label: 'Košík' }, { label: 'Objednávka' }]}
+      />
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left column – form */}
-          <div className="flex-1 space-y-6">
-            {/* Contact */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
-              <h2 className="font-bold text-gray-900 mb-4">Kontaktné údaje</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {field('meno', 'Meno')}
-                {field('priezvisko', 'Priezvisko')}
-                {field('email', 'E-mail', 'email')}
-                {field('telefon', 'Telefón', 'tel')}
-              </div>
-            </div>
-
-            {/* Address */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
-              <h2 className="font-bold text-gray-900 mb-4">Doručovacia adresa</h2>
-              <div className="space-y-4">
-                {field('ulica', 'Ulica a číslo domu')}
-                <div className="grid grid-cols-2 gap-4">
-                  {field('mesto', 'Mesto')}
-                  {field('psc', 'PSČ')}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Krajina</label>
-                  <select
-                    value={form.krajina}
-                    onChange={(e) => setForm({ ...form, krajina: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-honey-400"
-                  >
-                    <option>Slovensko</option>
-                    <option>Česká republika</option>
-                    <option>Maďarsko</option>
-                    <option>Rakúsko</option>
-                    <option>Poľsko</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Shipping */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
-              <h2 className="font-bold text-gray-900 mb-4">Spôsob dopravy</h2>
-              <div className="space-y-3">
-                {[
-                  { value: 'kurier', label: 'Kuriér (Slovenská pošta / GLS)', note: totalPrice >= 60 ? 'Zdarma' : '4,50 €' },
-                  { value: 'osobny', label: 'Osobný odber – Kraskovo 81', note: 'Zdarma' },
-                ].map((opt) => (
-                  <label
-                    key={opt.value}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                      form.sposobDopravy === opt.value
-                        ? 'border-honey-400 bg-honey-50'
-                        : 'border-gray-200 hover:border-honey-200'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="sposobDopravy"
-                      value={opt.value}
-                      checked={form.sposobDopravy === opt.value}
-                      onChange={(e) => setForm({ ...form, sposobDopravy: e.target.value })}
-                      className="accent-honey-500"
-                    />
-                    <span className="flex-1 text-sm font-medium text-gray-800">{opt.label}</span>
-                    <span className="text-sm font-semibold text-honey-700">{opt.note}</span>
-                  </label>
+      <form onSubmit={handleSubmit} noValidate className="container-page grid gap-8 py-10 sm:py-14 lg:grid-cols-[1fr_26rem] lg:items-start [&>*]:min-w-0">
+        <div className="space-y-8">
+          {errorList.length > 0 && (
+            <div ref={summaryRef} tabIndex={-1} role="alert" className="scroll-mt-40 rounded-2xl border-2 border-alert-600 bg-alert-50 p-6">
+              <h2 className="flex items-center gap-2 text-2xl font-bold text-alert-600">
+                <Icon name="alert" /> Prosím, opravte tieto údaje:
+              </h2>
+              <ul className="mt-3 list-disc space-y-1 pl-6 text-lg">
+                {errorList.map((k) => (
+                  <li key={k}>
+                    <a href={`#${k}`} className="font-semibold underline underline-offset-4">{errors[k]}</a>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
+          )}
 
-            {/* Payment */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
-              <h2 className="font-bold text-gray-900 mb-4">Spôsob platby</h2>
-              <div className="space-y-3">
-                {[
-                  { value: 'prevod', label: 'Bankový prevod', icon: '🏦', note: 'Platba vopred na účet' },
-                  { value: 'dobierka', label: 'Dobierka', icon: '📦', note: 'Platba pri prevzatí (+1,50 €)' },
-                ].map((opt) => (
-                  <label
-                    key={opt.value}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                      form.sposobPlatby === opt.value
-                        ? 'border-honey-400 bg-honey-50'
-                        : 'border-gray-200 hover:border-honey-200'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="sposobPlatby"
-                      value={opt.value}
-                      checked={form.sposobPlatby === opt.value}
-                      onChange={(e) => setForm({ ...form, sposobPlatby: e.target.value })}
-                      className="accent-honey-500"
-                    />
-                    <span className="text-xl">{opt.icon}</span>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-800">{opt.label}</div>
-                      <div className="text-xs text-gray-500">{opt.note}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
+          <Section n={1} title="Ako vás zastihneme">
+            <div className="grid gap-5 sm:grid-cols-2">
+              {field('meno', 'Meno', { autoComplete: 'given-name' })}
+              {field('priezvisko', 'Priezvisko', { autoComplete: 'family-name' })}
+              {field('telefon', 'Telefón', { type: 'tel', autoComplete: 'tel', inputMode: 'tel', hint: 'Napríklad 0911 123 456' })}
+              {field('email', 'E-mail', { type: 'email', autoComplete: 'email', inputMode: 'email', hint: 'Pošleme vám naň potvrdenie objednávky' })}
             </div>
+          </Section>
 
-            {/* Note */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
-              <h2 className="font-bold text-gray-900 mb-4">Poznámka k objednávke</h2>
-              <textarea
-                value={form.poznamka}
-                onChange={(e) => setForm({ ...form, poznamka: e.target.value })}
-                rows={3}
-                placeholder="Voliteľná poznámka pre predávajúceho..."
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-honey-400 resize-none"
-              />
-            </div>
+          <Section n={2} title="Doprava">
+            <Choices
+              name="doprava"
+              value={form.doprava}
+              onChange={(v) => set('doprava', v)}
+              options={Object.entries(DELIVERY).map(([value, d]) => ({
+                value,
+                icon: value === 'kurier' ? 'truck' : 'home',
+                label: d.label,
+                note: d.note,
+                price:
+                  value === 'osobny'
+                    ? 'zdarma'
+                    : order.subtotal >= FREE_SHIPPING_FROM
+                    ? 'zdarma'
+                    : formatPrice(priceOrder(items, 'kurier', 'prevod').shipping),
+              }))}
+            />
+          </Section>
 
-            {/* Consents */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 space-y-4">
-              <div>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.suhlasVop}
-                    onChange={(e) => setForm({ ...form, suhlasVop: e.target.checked })}
-                    className="mt-0.5 accent-honey-500 flex-shrink-0"
-                  />
-                  <span className="text-sm text-gray-700">
-                    Súhlasím s{' '}
-                    <Link href="/vop" target="_blank" className="text-honey-600 underline hover:text-honey-800">
-                      Obchodnými podmienkami
-                    </Link>{' '}
-                    a beriem na vedomie{' '}
-                    <Link href="/reklamacny-poriadok" target="_blank" className="text-honey-600 underline hover:text-honey-800">
-                      Reklamačný poriadok
-                    </Link>
-                    . <span className="text-red-500">*</span>
-                  </span>
-                </label>
-                {errors.suhlasVop && (
-                  <p className="text-red-500 text-xs mt-1 ml-7">{errors.suhlasVop}</p>
-                )}
+          {form.doprava === 'kurier' && (
+            <Section n={3} title="Kam máme tovar doručiť">
+              <div className="grid gap-5 sm:grid-cols-[1fr_12rem]">
+                <div className="sm:col-span-2">{field('ulica', 'Ulica a číslo domu', { autoComplete: 'street-address', hint: 'V obci bez ulíc stačí obec a súpisné číslo' })}</div>
+                {field('mesto', 'Obec / mesto', { autoComplete: 'address-level2' })}
+                {field('psc', 'PSČ', { autoComplete: 'postal-code', inputMode: 'numeric', maxLength: 6 })}
               </div>
-              <div>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.suhlasGdpr}
-                    onChange={(e) => setForm({ ...form, suhlasGdpr: e.target.checked })}
-                    className="mt-0.5 accent-honey-500 flex-shrink-0"
-                  />
-                  <span className="text-sm text-gray-700">
-                    Súhlasím so spracovaním osobných údajov v súlade s{' '}
-                    <Link href="/ochrana-udajov" target="_blank" className="text-honey-600 underline hover:text-honey-800">
-                      Ochranou osobných údajov (GDPR)
-                    </Link>
-                    . <span className="text-red-500">*</span>
-                  </span>
-                </label>
-                {errors.suhlasGdpr && (
-                  <p className="text-red-500 text-xs mt-1 ml-7">{errors.suhlasGdpr}</p>
-                )}
-              </div>
-            </div>
-          </div>
+              <p className="mt-4 text-lg text-ink-soft">Doručujeme na Slovensku. Do zahraničia sa, prosím, dohodnite s nami telefonicky.</p>
+            </Section>
+          )}
 
-          {/* Right column – order summary */}
-          <div className="lg:w-72">
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 sticky top-20">
-              <h2 className="font-bold text-gray-900 mb-4">Vaša objednávka</h2>
+          <Section n={form.doprava === 'kurier' ? 4 : 3} title="Platba">
+            <Choices
+              name="platba"
+              value={form.platba}
+              onChange={(v) => set('platba', v)}
+              options={paymentsFor(form.doprava).map((value) => ({
+                value,
+                icon: value === 'prevod' ? 'bank' : 'cash',
+                label: PAYMENT[value].label,
+                note: PAYMENT[value].note,
+              }))}
+            />
+          </Section>
 
-              <div className="space-y-2 mb-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span className="text-gray-700 truncate mr-2">
-                      {item.name} × {item.quantity}
-                    </span>
-                    <span className="font-medium flex-shrink-0">
-                      {(item.price * item.quantity).toFixed(2)} €
-                    </span>
-                  </div>
-                ))}
-              </div>
+          <Section n={form.doprava === 'kurier' ? 5 : 4} title="Poznámka (nepovinné)">
+            <label htmlFor="poznamka" className="sr-only">Poznámka k objednávke</label>
+            <textarea
+              id="poznamka"
+              rows={3}
+              maxLength={1000}
+              value={form.poznamka}
+              onChange={(e) => set('poznamka', e.target.value)}
+              placeholder="Napríklad kedy vás zastihneme doma"
+              className="field-input min-h-[7rem] py-3"
+            />
+          </Section>
 
-              <div className="border-t border-gray-100 pt-3 space-y-1 mb-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Doprava</span>
-                  <span>{shippingFee === 0 ? 'Zdarma' : `${shippingFee.toFixed(2)} €`}</span>
-                </div>
-                {form.sposobPlatby === 'dobierka' && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Dobierka</span>
-                    <span>1,50 €</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-gray-100 pt-3 mb-5">
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Celkom</span>
-                  <span className="text-honey-700">
-                    {(grandTotal + (form.sposobPlatby === 'dobierka' ? 1.5 : 0)).toFixed(2)} €
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400 mt-1">Vrátane DPH</p>
-              </div>
-
-              {serverError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">
-                  {serverError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-honey-500 hover:bg-honey-600 disabled:bg-honey-300 text-white font-bold py-3 rounded-xl transition-colors"
-              >
-                {submitting ? 'Odosielam...' : 'Záväzne objednať'}
-              </button>
-
-              <p className="text-xs text-gray-400 text-center mt-3">
-                Kliknutím na tlačidlo zadávate záväznú objednávku s povinnosťou platby.
-              </p>
-            </div>
+          {/* spam trap */}
+          <div aria-hidden="true" className="absolute left-[-9999px] h-px w-px overflow-hidden">
+            <label>
+              Nevypĺňajte <input tabIndex={-1} autoComplete="off" value={form.web} onChange={(e) => set('web', e.target.value)} />
+            </label>
           </div>
         </div>
+
+        <aside className="lg:sticky lg:top-40">
+          <div className="card p-6">
+            <h2 className="mb-4 text-2xl font-bold">Vaša objednávka</h2>
+            <ul className="divide-y divide-wax-200 text-lg">
+              {order.lines.map((l) => (
+                <li key={l.key} className="flex justify-between gap-4 py-2.5">
+                  <span>
+                    {l.product.name}
+                    {l.variant && <span className="text-ink-soft"> ({l.variant})</span>}
+                    <span className="whitespace-nowrap text-ink-soft"> × {l.quantity}</span>
+                  </span>
+                  <span className="whitespace-nowrap font-semibold">{formatPrice(l.lineTotal)}</span>
+                </li>
+              ))}
+            </ul>
+            <dl className="mt-2 space-y-1.5 border-t-2 border-wax-200 pt-3 text-lg">
+              <Row label="Tovar" value={formatPrice(order.subtotal)} />
+              <Row label="Doprava" value={order.shipping === 0 ? 'zdarma' : formatPrice(order.shipping)} />
+              {order.codFee > 0 && <Row label="Dobierka" value={formatPrice(order.codFee)} />}
+            </dl>
+            <div className="mt-3 flex items-baseline justify-between border-t-2 border-wax-200 pt-3">
+              <span className="text-xl font-bold">Spolu</span>
+              <span className="font-serif text-3xl font-bold text-bark-800">{formatPrice(order.total)}</span>
+            </div>
+            <p className="mt-1 text-base text-ink-soft">Nie sme platiteľmi DPH.</p>
+
+            <div className="mt-6">
+              <label className="flex cursor-pointer items-start gap-3 text-lg">
+                <input
+                  id="suhlasVop"
+                  type="checkbox"
+                  checked={form.suhlasVop}
+                  onChange={(e) => set('suhlasVop', e.target.checked)}
+                  aria-invalid={errors.suhlasVop ? 'true' : undefined}
+                  aria-describedby={errors.suhlasVop ? 'suhlasVop-error' : undefined}
+                  className="mt-1 h-6 w-6 flex-shrink-0 accent-honey-600"
+                />
+                <span>
+                  Súhlasím s{' '}
+                  <Link href="/vop" target="_blank" className="link">obchodnými podmienkami</Link> a s{' '}
+                  <Link href="/reklamacny-poriadok" target="_blank" className="link">reklamačným poriadkom</Link>.{' '}
+                  <span className="text-alert-600" aria-hidden="true">*</span>
+                </span>
+              </label>
+              {errors.suhlasVop && (
+                <p id="suhlasVop-error" className="field-error ml-9">{errors.suhlasVop}</p>
+              )}
+              <p className="mt-3 text-base text-ink-soft">
+                Vaše údaje použijeme len na vybavenie objednávky. Viac v časti{' '}
+                <Link href="/ochrana-udajov" target="_blank" className="link font-normal">Ochrana osobných údajov</Link>.
+              </p>
+            </div>
+
+            {serverError && (
+              <div role="alert" className="mt-5 rounded-xl border-2 border-alert-600 bg-alert-50 p-4 text-lg text-alert-600">
+                <p className="font-bold">{serverError}</p>
+                <p className="mt-1 text-ink">
+                  Objednať môžete aj telefonicky: <a href={site.phoneHref} className="link">{site.phone}</a>
+                </p>
+              </div>
+            )}
+
+            <button type="submit" disabled={submitting} className="btn-primary mt-6 w-full !min-h-[3.75rem] !text-xl">
+              {submitting ? 'Odosielam…' : 'Objednať s povinnosťou platby'}
+            </button>
+          </div>
+        </aside>
       </form>
+    </>
+  );
+}
+
+function Section({ n, title, children }) {
+  return (
+    <section className="card p-6 sm:p-8" aria-labelledby={`krok-${n}`}>
+      <h2 id={`krok-${n}`} className="mb-6 flex items-center gap-3 text-2xl font-bold">
+        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-honey-400 font-serif text-xl">{n}</span>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function Choices({ name, value, onChange, options }) {
+  return (
+    <div className="space-y-3" role="radiogroup">
+      {options.map((o) => (
+        <label
+          key={o.value}
+          className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-colors ${
+            value === o.value ? 'border-honey-600 bg-wax-50' : 'border-bark-500/25 bg-white hover:border-honey-500'
+          }`}
+        >
+          <input
+            type="radio"
+            name={name}
+            value={o.value}
+            checked={value === o.value}
+            onChange={() => onChange(o.value)}
+            className="h-6 w-6 flex-shrink-0 accent-honey-600"
+          />
+          <Icon name={o.icon} className="hidden h-8 w-8 flex-shrink-0 text-bark-600 sm:block" />
+          <span className="flex-1">
+            <span className="block text-xl font-bold">{o.label}</span>
+            <span className="block text-lg text-ink-soft">{o.note}</span>
+            {o.price && <span className="mt-1 block text-xl font-bold text-bark-800 sm:hidden">{o.price}</span>}
+          </span>
+          {o.price && <span className="hidden whitespace-nowrap text-xl font-bold text-bark-800 sm:block">{o.price}</span>}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex justify-between">
+      <dt>{label}</dt>
+      <dd className="font-semibold">{value}</dd>
+    </div>
+  );
+}
+
+function Success({ result }) {
+  return (
+    <div className="container-page py-14 sm:py-20">
+      <div className="card mx-auto max-w-2xl p-8 text-center sm:p-12">
+        <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-meadow-600 text-white">
+          <Icon name="check" className="h-10 w-10" strokeWidth={3} />
+        </span>
+        <h1 className="mt-6 text-4xl font-bold">Ďakujeme za objednávku!</h1>
+        <p className="mt-3 text-xl text-ink-soft">
+          Číslo objednávky: <strong className="text-ink">{result.orderNumber}</strong>
+        </p>
+        <p className="mt-2 text-xl text-ink-soft">
+          {result.customerEmailSent
+            ? 'Potvrdenie sme vám poslali e-mailom. Ak ho nevidíte, pozrite sa aj do priečinka „Spam“.'
+            : 'Objednávku sme prijali. Čoskoro sa vám ozveme telefonicky alebo e-mailom.'}
+        </p>
+
+        {result.payment === 'prevod' && (
+          <div className="mt-8 rounded-2xl bg-wax-50 p-6 text-left text-lg">
+            <h2 className="mb-3 text-2xl font-bold">Údaje na platbu</h2>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+              <dt className="font-semibold">Suma:</dt>
+              <dd className="font-bold">{formatPrice(result.total)}</dd>
+              <dt className="font-semibold">Variabilný symbol:</dt>
+              <dd className="font-bold">{result.orderNumber}</dd>
+              <dt className="font-semibold">Číslo účtu:</dt>
+              <dd className="font-bold">{result.iban || 'pošleme vám e-mailom'}</dd>
+            </dl>
+            <p className="mt-3 text-ink-soft">Tovar odošleme hneď, ako nám platba príde na účet.</p>
+          </div>
+        )}
+
+        <p className="mt-8 text-lg">
+          Otázky? Zavolajte na <a href={site.phoneHref} className="link">{site.phone}</a>.
+        </p>
+        <Link href="/" className="btn-primary mt-6">Späť na úvodnú stránku</Link>
+      </div>
     </div>
   );
 }

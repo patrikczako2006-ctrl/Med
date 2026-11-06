@@ -1,61 +1,75 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useCart } from './CartContext';
-import { useState } from 'react';
+import { ProductArt } from './Art';
+import Icon from './Icons';
+import { formatPrice } from '../lib/pricing';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
+  const href = `/produkty/${product.slug}`;
+  const soldOut = product.stock <= 0;
 
-  function handleAdd() {
-    addItem(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
-  }
-
-  const categoryEmoji = {
-    ule: '🏠',
-    ramiky: '🔲',
-    prislusenstvo: '🔧',
-    med: '🍯',
-  };
+  useEffect(() => {
+    if (!added) return;
+    const t = setTimeout(() => setAdded(false), 4000);
+    return () => clearTimeout(t);
+  }, [added]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col">
-      {/* Category badge + emoji */}
-      <div className="bg-honey-50 rounded-t-2xl p-6 flex items-center justify-center text-5xl min-h-[120px]">
-        {categoryEmoji[product.category] || '📦'}
-      </div>
+    <article className="card group flex flex-col overflow-hidden transition-shadow hover:shadow-lift">
+      <Link href={href} tabIndex={-1} aria-hidden="true" className="honeycomb block bg-wax-100">
+        <ProductArt art={product.art} className="mx-auto h-48 w-full max-w-[17rem] transition-transform duration-300 group-hover:scale-[1.04]" />
+      </Link>
 
-      <div className="p-5 flex flex-col flex-1">
-        <Link
-          href={`/produkty/${product.slug}`}
-          className="font-semibold text-gray-900 hover:text-honey-700 transition-colors mb-1 leading-snug"
-        >
-          {product.name}
-        </Link>
-        <p className="text-gray-500 text-sm mb-4 flex-1 line-clamp-2">
-          {product.description}
-        </p>
+      <div className="flex flex-1 flex-col p-6">
+        <h3 className="mb-2 text-2xl font-bold">
+          <Link href={href} className="hover:text-bark-700 hover:underline hover:decoration-honey-500 hover:decoration-2 hover:underline-offset-4">
+            {product.name}
+          </Link>
+        </h3>
+        <p className="mb-5 flex-1 text-lg text-ink-soft">{product.description}</p>
 
-        <div className="flex items-center justify-between mt-auto">
-          <span className="text-xl font-bold text-honey-700">
-            {product.price.toFixed(2)} €
-          </span>
-          <button
-            onClick={handleAdd}
-            disabled={added}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              added
-                ? 'bg-green-100 text-green-700'
-                : 'bg-honey-500 hover:bg-honey-600 text-white'
-            }`}
-          >
-            {added ? '✓ Pridané' : 'Do košíka'}
-          </button>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
+          <p className="font-serif text-3xl font-bold text-bark-800">{formatPrice(product.price)}</p>
+          <p className={`flex items-center gap-1.5 text-base font-semibold ${soldOut ? 'text-alert-600' : 'text-meadow-600'}`}>
+            <Icon name={soldOut ? 'close' : 'check'} className="h-5 w-5" strokeWidth={3} />
+            {soldOut ? 'Vypredané' : 'Skladom'}
+          </p>
         </div>
+
+        {product.variants ? (
+          <Link href={href} className="btn-outline w-full">
+            Vybrať typ úľa
+            <Icon name="arrowRight" className="h-5 w-5" />
+          </Link>
+        ) : added ? (
+          <div className="space-y-2" role="status">
+            <p className="flex min-h-[3.25rem] items-center justify-center gap-2 rounded-xl bg-meadow-50 text-lg font-bold text-meadow-700">
+              <Icon name="check" strokeWidth={3} /> Pridané do košíka
+            </p>
+            <Link href="/kosarik" className="link block text-center text-lg">
+              Prejsť do košíka
+            </Link>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn-primary w-full"
+            disabled={soldOut}
+            onClick={() => {
+              addItem(product.id, 1);
+              setAdded(true);
+            }}
+          >
+            <Icon name="cart" />
+            Pridať do košíka
+          </button>
+        )}
       </div>
-    </div>
+    </article>
   );
 }

@@ -1,123 +1,132 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useCart } from './CartContext';
+import { LogoMark } from './Art';
+import Icon from './Icons';
+import FontSizeToggle from './FontSizeToggle';
+import { site } from '../lib/site';
+import { FREE_SHIPPING_FROM } from '../lib/pricing';
+
+const navLinks = [
+  { href: '/', label: 'Domov' },
+  { href: '/produkty', label: 'Ponuka' },
+  { href: '/o-nas', label: 'O nás' },
+  { href: '/kontakt', label: 'Kontakt' },
+];
 
 export default function Header() {
-  const { totalItems } = useCart();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const { totalItems, ready } = useCart();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
-  const navLinks = [
-    { href: '/', label: 'Domov' },
-    { href: '/produkty', label: 'Produkty' },
-    { href: '/o-nas', label: 'O nás' },
-    { href: '/kontakt', label: 'Kontakt' },
-  ];
+  useEffect(() => setOpen(false), [pathname]);
+
+  const isActive = (href) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-3xl">🐝</span>
-            <div>
-              <div className="font-bold text-honey-800 text-lg leading-tight group-hover:text-honey-600 transition-colors">
-                Krokavec
-              </div>
-              <div className="text-xs text-gray-500 leading-tight">
-                Včelárstvo a med
-              </div>
-            </div>
+    <header className="sticky top-0 z-50">
+      {/* Top info bar */}
+      <div className="bg-bark-800 text-wax-50">
+        <div className="container-page flex min-h-[2.75rem] flex-wrap items-center justify-between gap-x-6 gap-y-1 py-1 text-base">
+          <a href={site.phoneHref} className="inline-flex items-center gap-2 font-semibold hover:text-honey-300">
+            <Icon name="phone" className="h-5 w-5" />
+            <span>
+              <span className="hidden sm:inline">Poradíme aj telefonicky: </span>
+              {site.phone}
+            </span>
+          </a>
+          <p className="hidden items-center gap-2 md:flex">
+            <Icon name="truck" className="h-5 w-5 text-honey-300" />
+            Doprava zdarma od {FREE_SHIPPING_FROM} €
+          </p>
+          <FontSizeToggle className="hover:bg-bark-700" />
+        </div>
+      </div>
+
+      {/* Main bar */}
+      <div className="border-b border-wax-200 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/85">
+        <div className="container-page flex min-h-[5rem] items-center justify-between gap-2 sm:gap-4">
+          <Link href="/" className="group flex items-center gap-3" aria-label={`${site.name} – úvodná stránka`}>
+            <LogoMark className="h-11 w-11 flex-shrink-0 transition-transform group-hover:-rotate-6 sm:h-12 sm:w-12" />
+            <span className="hidden leading-tight min-[430px]:block">
+              <span className="block font-serif text-[1.35rem] font-bold text-bark-800 sm:text-2xl">{site.name}</span>
+              <span className="hidden text-base text-ink-soft sm:block">Včelárstvo a med z Kraskova</span>
+            </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="text-gray-700 hover:text-honey-600 font-medium transition-colors"
-              >
-                {l.label}
-              </Link>
-            ))}
+          <nav aria-label="Hlavná ponuka" className="hidden lg:block">
+            <ul className="flex items-center gap-1">
+              {navLinks.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    aria-current={isActive(l.href) ? 'page' : undefined}
+                    className={`relative rounded-lg px-4 py-2.5 text-lg font-semibold transition-colors hover:bg-wax-100 ${
+                      isActive(l.href) ? 'text-bark-900' : 'text-ink-soft'
+                    }`}
+                  >
+                    {l.label}
+                    {isActive(l.href) && (
+                      <span className="absolute inset-x-4 -bottom-0.5 h-1 rounded-full bg-honey-500" />
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
 
-          {/* Cart + mobile toggle */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/kosarik"
-              className="relative flex items-center gap-1.5 bg-honey-500 hover:bg-honey-600 text-white px-4 py-2 rounded-full font-medium transition-colors text-sm"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              Košík
-              {totalItems > 0 && (
-                <span className="bg-white text-honey-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <Link href="/kosarik" className="btn-primary !min-h-[3rem] !gap-1.5 !px-3 sm:!gap-2.5 sm:!px-5">
+              <Icon name="cart" />
+              <span className="cart-label">Košík</span>
+              {ready && totalItems > 0 && (
+                <span className="ml-0.5 inline-flex h-7 min-w-[1.75rem] items-center justify-center rounded-full bg-bark-800 px-1.5 text-base text-cream">
                   {totalItems}
+                  <span className="sr-only"> ks</span>
                 </span>
               )}
             </Link>
-
-            {/* Mobile menu button */}
             <button
-              className="md:hidden p-2 text-gray-600"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Menu"
+              type="button"
+              className="btn-outline !min-h-[3rem] flex-shrink-0 !px-3 lg:hidden"
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              onClick={() => setOpen((v) => !v)}
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {mobileOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
+              <Icon name={open ? 'close' : 'menu'} />
+              <span className="hidden sm:inline">Menu</span>
+              <span className="sr-only sm:hidden">Menu</span>
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="md:hidden border-t border-gray-100 py-3 pb-4">
-            {navLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="block px-2 py-2.5 text-gray-700 hover:text-honey-600 font-medium"
-                onClick={() => setMobileOpen(false)}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
+        {open && (
+          <nav id="mobile-menu" aria-label="Hlavná ponuka" className="border-t border-wax-200 bg-cream lg:hidden">
+            <ul className="container-page py-3">
+              {navLinks.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    aria-current={isActive(l.href) ? 'page' : undefined}
+                    className={`flex min-h-[3.5rem] items-center justify-between border-b border-wax-100 px-2 text-xl font-semibold ${
+                      isActive(l.href) ? 'text-bark-900' : 'text-ink-soft'
+                    }`}
+                  >
+                    {l.label}
+                    <Icon name="arrowRight" className="h-5 w-5 text-honey-600" />
+                  </Link>
+                </li>
+              ))}
+              <li className="pt-4">
+                <a href={site.phoneHref} className="btn-dark w-full">
+                  <Icon name="phone" /> Zavolať {site.phone}
+                </a>
+              </li>
+            </ul>
+          </nav>
         )}
       </div>
     </header>

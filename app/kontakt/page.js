@@ -1,134 +1,84 @@
+import PageHeader from '../../components/PageHeader';
+import Icon from '../../components/Icons';
+import { site } from '../../lib/site';
+
 export const metadata = {
   title: 'Kontakt',
-  description: 'Kontaktujte Milan Krokavec – včelárstvo a med, Kraskovo.',
+  description: 'Kontakt na Milana Krokavca – včelárstvo a med, Kraskovo. Telefón 0911 768 758.',
 };
 
 export default function KontaktPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Kontakt</h1>
+    <>
+      <PageHeader
+        title="Kontakt"
+        intro="Najrýchlejšie nás zastihnete telefonicky. Na e-maily odpovedáme do 24 hodín."
+        crumbs={[{ href: '/', label: 'Domov' }, { label: 'Kontakt' }]}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Contact info */}
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-          <h2 className="font-bold text-gray-900 text-lg mb-6">Kontaktné údaje</h2>
-
-          <div className="space-y-5">
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">🧑‍🌾</span>
-              <div>
-                <p className="font-semibold text-gray-900">Milan Krokavec</p>
-                <p className="text-gray-500 text-sm">IČO: (doplniť)</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">📍</span>
-              <div>
-                <p className="font-semibold text-gray-900">Adresa</p>
-                <p className="text-gray-600 text-sm">
-                  Kraskovo 81<br />
-                  980 26 Kraskovo<br />
-                  Slovenská republika
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">📞</span>
-              <div>
-                <p className="font-semibold text-gray-900">Telefón</p>
-                <a
-                  href="tel:+421911768758"
-                  className="text-honey-600 hover:text-honey-800 transition-colors text-sm"
-                >
-                  0911 768 758
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">✉️</span>
-              <div>
-                <p className="font-semibold text-gray-900">E-mail</p>
-                <a
-                  href="mailto:milan@krokavec.sk"
-                  className="text-honey-600 hover:text-honey-800 transition-colors text-sm"
-                >
-                  milan@krokavec.sk
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">🕒</span>
-              <div>
-                <p className="font-semibold text-gray-900">Otváracie hodiny</p>
-                <p className="text-gray-600 text-sm">
-                  Osobný odber po predchádzajúcej dohode.<br />
-                  Odpovieme do 24 hodín.
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="container-page py-12 sm:py-16">
+        <div className="grid gap-6 md:grid-cols-2">
+          <a href={site.phoneHref} className="group flex min-w-0 items-center gap-4 rounded-2xl bg-bark-800 p-5 sm:gap-5 sm:p-7 text-cream shadow-card transition-colors hover:bg-bark-900">
+            <span className="hidden h-16 w-16 flex-shrink-0 min-[400px]:flex items-center justify-center rounded-full bg-honey-400 text-ink">
+              <Icon name="phone" className="h-8 w-8" />
+            </span>
+            <span>
+              <span className="block text-lg text-wax-200">Zavolajte nám</span>
+              <span className="block whitespace-nowrap font-serif text-[1.6rem] font-bold text-honey-300 group-hover:underline sm:text-4xl">{site.phone}</span>
+            </span>
+          </a>
+          <a href={`mailto:${site.email}`} className="card group flex min-w-0 items-center gap-4 p-5 sm:gap-5 sm:p-7 transition-colors hover:border-honey-400">
+            <span className="hidden h-16 w-16 flex-shrink-0 min-[400px]:flex items-center justify-center rounded-full bg-wax-100 text-bark-700">
+              <Icon name="mail" className="h-8 w-8" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-lg text-ink-soft">Napíšte nám</span>
+              <span className="block break-all font-serif text-xl font-bold text-bark-800 group-hover:underline sm:text-3xl">{site.email}</span>
+            </span>
+          </a>
         </div>
 
-        {/* Info card */}
-        <div className="space-y-5">
-          <div className="bg-honey-50 rounded-2xl p-6 border border-honey-200">
-            <h3 className="font-bold text-honey-900 mb-2">📦 Osobný odber</h3>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              Tovar je možné vyzdvihnúť osobne na adrese Kraskovo 81
-              po predchádzajúcom telefonickom alebo e-mailovom dohodnutí.
-              Osobný odber je bezplatný.
-            </p>
-          </div>
-
-          <div className="bg-honey-50 rounded-2xl p-6 border border-honey-200">
-            <h3 className="font-bold text-honey-900 mb-2">🐝 Poradenstvo</h3>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              Ak neviete, aký úľ alebo konfiguráciu si vybrať, radi poradíme.
-              Stačí nás kontaktovať telefonicky alebo e-mailom – sme tu pre Vás.
-            </p>
-          </div>
-
-          <div className="bg-honey-50 rounded-2xl p-6 border border-honey-200">
-            <h3 className="font-bold text-honey-900 mb-2">🛒 Špeciálne objednávky</h3>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              Prijímame aj špeciálne objednávky – napr. rámiky na mieru
-              alebo väčšie množstvá. Kontaktujte nás s požiadavkou.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3">Sledujte nás</h3>
-            <a
-              href="https://www.facebook.com/krokavec.sk/"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium"
-            >
-              <span className="text-xl">📘</span>
-              Facebook – Krokavec
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+          <div className="card p-7 text-lg">
+            <h2 className="mb-5 text-2xl font-bold">Adresa</h2>
+            <address className="flex gap-4 not-italic">
+              <Icon name="pin" className="h-7 w-7 flex-shrink-0 text-bark-600" />
+              <span>
+                <strong>{site.owner}</strong>
+                <br />
+                {site.street}
+                <br />
+                {site.zip} {site.city}
+                <br />
+                <span className="text-ink-soft">{site.district}</span>
+              </span>
+            </address>
+            {site.ico && <p className="mt-4 text-ink-soft">IČO: {site.ico}</p>}
+            <a href={site.mapUrl} target="_blank" rel="noreferrer" className="btn-outline mt-6 w-full sm:w-auto">
+              <Icon name="pin" className="h-5 w-5" /> Ukázať na mape
+            </a>
+            <a href={site.facebook} target="_blank" rel="noreferrer" className="link mt-5 flex items-center gap-2">
+              <Icon name="facebook" className="h-5 w-5" /> Sledujte nás na Facebooku
             </a>
           </div>
+
+          <div className="space-y-4">
+            {[
+              ['home', 'Osobný odber', 'Tovar si môžete vyzdvihnúť priamo u nás v Kraskove – zadarmo. Vopred nám, prosím, zavolajte, aby sme boli doma.'],
+              ['handshake', 'Poradenstvo', 'Neviete, aký úľ si vybrať? Radi poradíme začínajúcim aj skúseným včelárom.'],
+              ['box', 'Objednávky na mieru', 'Prijímame aj špeciálne objednávky – napríklad rámiky na mieru alebo väčšie množstvá.'],
+            ].map(([icon, title, text]) => (
+              <div key={title} className="flex gap-4 rounded-2xl border border-wax-200 bg-wax-50 p-6">
+                <Icon name={icon} className="h-8 w-8 flex-shrink-0 text-bark-600" />
+                <div>
+                  <h2 className="text-xl font-bold">{title}</h2>
+                  <p className="mt-1 text-lg text-ink-soft">{text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
-      {/* Map placeholder */}
-      <div className="mt-6 bg-honey-50 rounded-2xl p-8 border border-honey-100 text-center">
-        <p className="text-gray-500 text-sm">
-          📍 Kraskovo 81, 980 26 Kraskovo – obec v okrese Revúca, Banskobystrický kraj
-        </p>
-        <a
-          href="https://maps.google.com/?q=Kraskovo+81,+980+26+Kraskovo"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block mt-3 text-honey-600 hover:text-honey-800 text-sm font-medium transition-colors"
-        >
-          Zobraziť na Google Maps →
-        </a>
-      </div>
-    </div>
+    </>
   );
 }
